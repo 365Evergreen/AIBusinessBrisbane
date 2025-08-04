@@ -5,6 +5,17 @@ trigger:
     - main
     - master
 
+# Request permissions for the pipeline
+resources:
+  repositories:
+  - repository: self
+    trigger: 
+      branches:
+        include:
+        - AIAutomation
+        - main
+        - master
+
 variables:
 - group: AIAutomationVariableGroup
 - name: azureServiceConnection
