@@ -72,7 +72,6 @@ stages:
     displayName: 'Deploy Infrastructure'
     pool:
       vmImage: 'ubuntu-latest'
-    environment: 'dev'
     strategy:
       runOnce:
         deploy:
@@ -116,7 +115,6 @@ stages:
     dependsOn: DeployInfrastructure
     pool:
       vmImage: 'ubuntu-latest'
-    environment: 'dev'
     strategy:
       runOnce:
         deploy:
