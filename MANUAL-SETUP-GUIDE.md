@@ -95,9 +95,13 @@ No access tokens needed - GitHub Actions and Azure OIDC handle all the authentic
 - Verify the **exact** branch: `AgentBuilder`
 - Make sure you selected "GitHub Actions deploying Azure resources"
 
+### Common Error: `Unsupported value 'OIDC' for authentication type`
+**Solution**: For `azure/login@v2`, OIDC is automatic - don't specify `auth-type`
+- Remove `auth-type: OIDC` from your workflow
+- Azure login v2 automatically uses OIDC when you provide client-id, tenant-id, and subscription-id
+
 ### Common Error: `Interactive authentication is needed. Please run: az login`
-**Solution**: Your workflow needs `auth-type: OIDC` parameter
-- Check that your workflow has: `auth-type: OIDC` under the Azure login step
+**Solution**: You need federated credentials configured (see Step 3 above)
 
 ### Other Common Issues:
 1. **Wrong subscription ID** - Double-check in Azure Portal
