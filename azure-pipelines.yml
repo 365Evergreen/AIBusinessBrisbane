@@ -6,7 +6,7 @@ trigger:
     - master
 
 variables:
-  azureServiceConnection: 'AgentBuilder-ServiceConnection'
+  azureServiceConnection: 'AIAutomation-service-connector'
   resourceGroupName: 'rg-agentbuilder-dev'
   location: 'eastus'
   environmentName: 'dev'
