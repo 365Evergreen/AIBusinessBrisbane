@@ -6,10 +6,15 @@ trigger:
     - master
 
 variables:
-  azureServiceConnection: 'AIAutomation-service-connector'
-  resourceGroupName: 'rg-agentbuilder-dev'
-  location: 'eastus'
-  environmentName: 'dev'
+- group: AIAutomationVariableGroup
+- name: azureServiceConnection
+  value: 'AIAutomation-service-connector'
+- name: resourceGroupName
+  value: 'rg-agentbuilder-dev'
+- name: location
+  value: 'eastus'
+- name: environmentName
+  value: 'dev'
 
 stages:
 - stage: Build
