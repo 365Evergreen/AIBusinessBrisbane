@@ -1,0 +1,147 @@
+trigger:
+  branches:
+    include:
+    - Matterx
+    - main
+    - master
+
+variables:
+  azureServiceConnection: 'AgentBuilder-ServiceConnection'
+  resourceGroupName: 'rg-agentbuilder-dev'
+  location: 'eastus'
+  environmentName: 'dev'
+
+stages:
+- stage: Build
+  displayName: 'Build Application'
+  jobs:
+  - job: BuildFrontend
+    displayName: 'Build React Frontend'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Install Node.js'
+    
+    - script: |
+        cd agentbuilder-frontend
+        npm ci
+        npm run build
+      displayName: 'Build React App'
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: 'agentbuilder-frontend/build'
+        ArtifactName: 'frontend-build'
+      displayName: 'Publish Frontend Artifacts'
+
+  - job: BuildBackend
+    displayName: 'Build Azure Functions Backend'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Install Node.js'
+    
+    - script: |
+        cd agentbuilder-backend
+        npm ci
+      displayName: 'Install Backend Dependencies'
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: 'agentbuilder-backend'
+        ArtifactName: 'backend-build'
+      displayName: 'Publish Backend Artifacts'
+
+- stage: Deploy
+  displayName: 'Deploy to Azure'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployInfrastructure
+    displayName: 'Deploy Infrastructure'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@2
+            displayName: 'Deploy Bicep Infrastructure'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Set environment variables
+                export AZURE_ENV_NAME=$(environmentName)
+                export AZURE_LOCATION=$(location)
+                export DATAVERSE_CLIENT_ID=$(DATAVERSE_CLIENT_ID)
+                export DATAVERSE_CLIENT_SECRET=$(DATAVERSE_CLIENT_SECRET)
+                export DATAVERSE_TENANT_ID=$(DATAVERSE_TENANT_ID)
+                export DATAVERSE_RESOURCE=$(DATAVERSE_RESOURCE)
+                
+                # Deploy infrastructure
+                az deployment sub create \
+                  --location $(location) \
+                  --template-file infra/main.bicep \
+                  --parameters infra/main.parameters.json \
+                  --parameters environmentName=$(environmentName) \
+                  --parameters location=$(location) \
+                  --parameters resourceGroupName=$(resourceGroupName) \
+                  --parameters dataverseClientId="$(DATAVERSE_CLIENT_ID)" \
+                  --parameters dataverseClientSecret="$(DATAVERSE_CLIENT_SECRET)" \
+                  --parameters dataverseTenantId="$(DATAVERSE_TENANT_ID)" \
+                  --parameters dataverseResource="$(DATAVERSE_RESOURCE)" \
+                  --name "agentbuilder-$(environmentName)-$(Build.BuildId)"
+                
+                # Wait for deployment to complete
+                az deployment sub wait \
+                  --name "agentbuilder-$(environmentName)-$(Build.BuildId)" \
+                  --created
+
+  - deployment: DeployApplication
+    displayName: 'Deploy Application'
+    dependsOn: DeployInfrastructure
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: frontend-build
+          
+          - download: current
+            artifact: backend-build
+          
+          - task: AzureCLI@2
+            displayName: 'Deploy Frontend to Static Web App'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Get Static Web App deployment token
+                staticWebAppName=$(az staticwebapp list --resource-group $(resourceGroupName) --query "[0].name" -o tsv)
+                deploymentToken=$(az staticwebapp secrets list --resource-group $(resourceGroupName) --name $staticWebAppName --query "properties.apiKey" -o tsv)
+                
+                # Deploy frontend using SWA CLI
+                npm install -g @azure/static-web-apps-cli
+                swa deploy $(Pipeline.Workspace)/frontend-build --deployment-token $deploymentToken
+          
+          - task: AzureFunctionApp@1
+            displayName: 'Deploy Backend to Function App'
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              appType: 'functionApp'
+              appName: $(functionAppName)
+              package: '$(Pipeline.Workspace)/backend-build'
+              deploymentMethod: 'auto'

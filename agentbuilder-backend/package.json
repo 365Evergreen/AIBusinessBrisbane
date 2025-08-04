@@ -1,0 +1,17 @@
+{
+  "name": "agentbuilder-backend",
+  "version": "1.0.0",
+  "description": "Azure Functions backend for AgentBuilder application",
+  "main": "index.js",
+  "scripts": {
+    "start": "func host start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "adal-node": "^0.2.4",
+    "node-fetch": "^2.7.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

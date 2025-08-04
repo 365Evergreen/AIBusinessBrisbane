@@ -1,0 +1,20 @@
+{
+  "name": "agentbuilder",
+  "version": "1.0.0",
+  "description": "AgentBuilder - Azure Static Web App with React frontend and Azure Functions backend",
+  "scripts": {
+    "build": "cd agentbuilder-frontend && npm install && npm run build",
+    "build:azure": "cd agentbuilder-frontend && npm install && npm run build",
+    "start": "cd agentbuilder-frontend && npm start",
+    "install:frontend": "cd agentbuilder-frontend && npm install",
+    "install:backend": "cd agentbuilder-backend && npm install"
+  },
+  "keywords": [
+    "azure",
+    "static-web-app",
+    "react",
+    "azure-functions"
+  ],
+  "author": "",
+  "license": "ISC"
+}

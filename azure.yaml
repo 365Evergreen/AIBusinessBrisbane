@@ -1,0 +1,14 @@
+name: agent-builder
+metadata:
+  template: AgentBuilder@0.0.1-beta
+infra:
+  provider: bicep
+services:
+  agentbuilder-frontend:
+    project: agentbuilder-frontend
+    host: staticwebapp
+    language: js
+  agentbuilder-backend:
+    project: agentbuilder-backend
+    host: function
+    language: js
