@@ -44,6 +44,7 @@ stages:
 
   - job: BuildBackend
     displayName: 'Build Azure Functions Backend'
+    dependsOn: BuildFrontend
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -139,6 +140,6 @@ stages:
       inputs:
         azureSubscription: $(azureServiceConnection)
         appType: 'functionApp'
-        appName: $(functionAppName)
+        appName: 'func-agentbuilder-$(environmentName)'
         package: '$(Pipeline.Workspace)/backend-build'
         deploymentMethod: 'auto'
