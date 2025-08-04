@@ -4,16 +4,16 @@
   "version": "1.0.0",
   "azure": {
     "subscription": {
-      "id": "YOUR_SUBSCRIPTION_ID_HERE",
-      "name": "Your Azure Subscription Name"
+      "id": "6b311f79-36fa-44d4-8399-27bbd92de579",
+      "name": "Pay-As-You-Go"
     },
     "tenant": {
-      "id": "YOUR_TENANT_ID_HERE",
+      "id": "7a5bf294-6ae8-47c4-b0c4-b2f9166d7a3f",
       "name": "Your Azure Tenant"
     },
     "appRegistration": {
       "name": "github-actions-agentbuilder",
-      "clientId": "YOUR_CLIENT_ID_HERE"
+      "clientId": "3feb91d8-029b-4500-82f1-ddd250637245"
     },
     "resources": {
       "resourceGroup": "rg-agentbuilder-dev",

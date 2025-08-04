@@ -20,20 +20,33 @@
 5. **Click "Register"**
 6. **Copy the "Application (client) ID"** - this is your `AZURE_CLIENT_ID`
 
-## Step 3: Create Service Principal and Assign Permissions
+## Step 3: Configure Federated Identity Credentials (CRITICAL!)
 
-1. **In your app registration**, go to **"Certificates & secrets"**
-2. **Click "Federated credentials"** tab
-3. **Click "Add credential"**
-4. **Select "GitHub Actions deploying Azure resources"**
-5. **Fill in**:
-   - Organization: `365Evergreen`
-   - Repository: `AIBusinessBrisbane`
-   - Entity type: `Branch`
-   - GitHub branch name: `AgentBuilder`
-6. **Click "Add"**
+⚠️ **This is the most important step - without this, GitHub Actions will fail with OIDC authentication error**
 
-7. **Repeat for other branches** (main, DemoSignUp) if needed
+1. **Go to Azure Portal** → **Microsoft Entra ID** → **App registrations**
+2. **Find your app**: `github-actions-agentbuilder` (Client ID: `3feb91d8-029b-4500-82f1-ddd250637245`)
+3. **Click on your app registration**
+4. **Go to**: **Certificates & secrets** (in the left menu)
+5. **Click**: **Federated credentials** tab
+6. **Click**: **Add credential**
+7. **Select**: **GitHub Actions deploying Azure resources**
+8. **Fill in these EXACT values**:
+   - **Organization**: `365Evergreen`
+   - **Repository**: `AIBusinessBrisbane`
+   - **Entity type**: `Branch`
+   - **GitHub branch name**: `AgentBuilder`
+   - **Name**: `github-agentbuilder-branch`
+9. **Click**: **Add**
+
+### Verify the Configuration Shows:
+- **Issuer**: `https://token.actions.githubusercontent.com`
+- **Subject**: `repo:365Evergreen/AIBusinessBrisbane:ref:refs/heads/AgentBuilder`
+- **Audiences**: `api://AzureADTokenExchange`
+
+### 🚨 Common Error:
+If you see: `AADSTS70025: The client has no configured federated identity credentials`
+- You skipped this step or made a typo in the repository/branch name
 
 ## Step 4: Assign Azure Permissions
 
@@ -75,10 +88,22 @@ No access tokens needed - GitHub Actions and Azure OIDC handle all the authentic
 
 ## 🔍 If You Get Stuck:
 
-The most common issues are:
+### Common Error: `AADSTS70025: The client has no configured federated identity credentials`
+**Solution**: You need to configure federated credentials (Step 3 above)
+- Verify the **exact** repository name: `AIBusinessBrisbane`
+- Verify the **exact** organization: `365Evergreen`
+- Verify the **exact** branch: `AgentBuilder`
+- Make sure you selected "GitHub Actions deploying Azure resources"
+
+### Common Error: `Interactive authentication is needed. Please run: az login`
+**Solution**: Your workflow needs `auth-type: OIDC` parameter
+- Check that your workflow has: `auth-type: OIDC` under the Azure login step
+
+### Other Common Issues:
 1. **Wrong subscription ID** - Double-check in Azure Portal
-2. **Federated credential not set up** - Make sure you added the GitHub branch correctly
-3. **Missing Dataverse secrets** - Check that all 4 Dataverse secrets are added
+2. **Missing GitHub secrets** - Check that all 7 secrets are added
+3. **App registration not found** - Make sure the Client ID matches exactly
+4. **No Contributor permissions** - Verify the app has Contributor role on subscription
 
 Your workflow will automatically:
 - ✅ Build your React frontend
