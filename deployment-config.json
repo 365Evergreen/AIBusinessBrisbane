@@ -1,0 +1,130 @@
+{
+  "name": "Agent Builder Deployment Configuration",
+  "description": "Configuration file for deploying Agent Builder to Azure using GitHub Actions",
+  "version": "1.0.0",
+  "azure": {
+    "subscription": {
+      "id": "YOUR_SUBSCRIPTION_ID_HERE",
+      "name": "Your Azure Subscription Name"
+    },
+    "tenant": {
+      "id": "YOUR_TENANT_ID_HERE",
+      "name": "Your Azure Tenant"
+    },
+    "appRegistration": {
+      "name": "github-actions-agentbuilder",
+      "clientId": "YOUR_CLIENT_ID_HERE"
+    },
+    "resources": {
+      "resourceGroup": "rg-agentbuilder-dev",
+      "location": "eastus",
+      "environment": "dev"
+    }
+  },
+  "github": {
+    "repository": {
+      "owner": "365Evergreen",
+      "name": "AIBusinessBrisbane",
+      "branch": "AgentBuilder"
+    },
+    "secrets": {
+      "required": [
+        {
+          "name": "AZURE_CLIENT_ID",
+          "description": "Azure App Registration Client ID",
+          "source": "Azure Portal → App Registrations → Your App → Application (client) ID"
+        },
+        {
+          "name": "AZURE_TENANT_ID", 
+          "description": "Azure Tenant ID",
+          "source": "Azure Portal → Microsoft Entra ID → Tenant ID"
+        },
+        {
+          "name": "AZURE_SUBSCRIPTION_ID",
+          "description": "Azure Subscription ID", 
+          "source": "Azure Portal → Subscriptions → Your Subscription → Subscription ID"
+        },
+        {
+          "name": "DATAVERSE_CLIENT_ID",
+          "description": "Dataverse App Registration Client ID",
+          "source": "Power Platform Admin Center → App Registrations"
+        },
+        {
+          "name": "DATAVERSE_CLIENT_SECRET",
+          "description": "Dataverse App Registration Secret",
+          "source": "Power Platform Admin Center → App Registrations → Your App → Secrets"
+        },
+        {
+          "name": "DATAVERSE_TENANT_ID",
+          "description": "Dataverse Tenant ID (usually same as Azure Tenant ID)",
+          "source": "Power Platform Admin Center"
+        },
+        {
+          "name": "DATAVERSE_RESOURCE",
+          "description": "Dataverse Environment URL",
+          "source": "Power Platform Admin Center → Environment URL",
+          "example": "https://org12345.crm.dynamics.com"
+        }
+      ]
+    }
+  },
+  "deployment": {
+    "workflow": {
+      "file": ".github/workflows/deploy.yml",
+      "triggers": ["push", "workflow_dispatch"],
+      "branches": ["main", "master", "DemoSignUp", "AgentBuilder"]
+    },
+    "stages": [
+      {
+        "name": "build",
+        "description": "Build React frontend and Azure Functions backend",
+        "jobs": ["build-frontend", "build-backend"]
+      },
+      {
+        "name": "deploy",
+        "description": "Deploy infrastructure and applications to Azure",
+        "jobs": ["deploy-infrastructure", "deploy-applications"]
+      }
+    ],
+    "targets": {
+      "frontend": {
+        "service": "Azure Static Web Apps",
+        "path": "agentbuilder-frontend/build"
+      },
+      "backend": {
+        "service": "Azure Functions",
+        "path": "agentbuilder-backend",
+        "runtime": "Node.js 20"
+      },
+      "infrastructure": {
+        "template": "infra/main.bicep",
+        "parameters": "infra/main.parameters.json"
+      }
+    }
+  },
+  "instructions": {
+    "setup": [
+      "1. Go to Azure Portal and get your Subscription ID and Tenant ID",
+      "2. Create Azure App Registration named 'github-actions-agentbuilder'",
+      "3. Set up federated credentials for GitHub Actions",
+      "4. Assign Contributor role to the app registration",
+      "5. Add all required secrets to GitHub repository",
+      "6. Run the GitHub Actions workflow"
+    ],
+    "links": {
+      "azurePortal": "https://portal.azure.com",
+      "githubSecrets": "https://github.com/365Evergreen/AIBusinessBrisbane/settings/secrets/actions",
+      "githubActions": "https://github.com/365Evergreen/AIBusinessBrisbane/actions",
+      "setupGuide": "./MANUAL-SETUP-GUIDE.md"
+    }
+  },
+  "federatedCredentials": {
+    "issuer": "https://token.actions.githubusercontent.com",
+    "audiences": ["api://AzureADTokenExchange"],
+    "subjects": [
+      "repo:365Evergreen/AIBusinessBrisbane:ref:refs/heads/main",
+      "repo:365Evergreen/AIBusinessBrisbane:ref:refs/heads/DemoSignUp", 
+      "repo:365Evergreen/AIBusinessBrisbane:ref:refs/heads/AgentBuilder"
+    ]
+  }
+}
