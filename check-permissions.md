@@ -5,12 +5,22 @@
 - [ ] Click Security tab
 - [ ] Add "[Project Name] Build Service" with User permissions
 
-## 2. Service Connection Permissions
+## 2. Service Connection Setup (No Azure Service Principal Required!)
+### Option A: If AIAutomation-service-connector doesn't exist, create it:
+- [ ] Go to Project Settings → Service connections
+- [ ] Click "New service connection"
+- [ ] Select "Azure Resource Manager"
+- [ ] Choose "Service principal (automatic)" - Azure DevOps will create it for you
+- [ ] Name it "AIAutomation-service-connector"
+- [ ] Select your subscription and resource group
+- [ ] Azure DevOps handles the service principal creation automatically
+
+### Option B: If AIAutomation-service-connector exists:
 - [ ] Go to Project Settings → Service connections
 - [ ] Find "AIAutomation-service-connector"
 - [ ] Click Security tab
 - [ ] Ensure build service has access
-- [ ] Verify Azure service principal has Contributor role
+- [ ] The service principal is automatically managed by Azure DevOps
 
 ## 3. Repository Permissions
 - [ ] Go to Project Settings → Repositories → AI Automation
@@ -28,14 +38,29 @@
 - [ ] Click Edit → More actions → Security
 - [ ] Ensure proper permissions are set
 
-## Quick Fix Commands (if you have Azure CLI access):
+## Quick Steps to Create Service Connection (Azure DevOps will handle the service principal):
+
+### Step-by-Step Service Connection Creation:
+1. Go to your Azure DevOps project: https://dev.azure.com/365EvergreenSolutions/AI%20Automation
+2. Click the gear icon (Project Settings) in bottom left
+3. Under "Pipelines", click "Service connections"
+4. Click "Create service connection"
+5. Select "Azure Resource Manager"
+6. Choose "Service principal (automatic)" - **Azure DevOps creates the service principal for you**
+7. Select your Azure subscription
+8. For Resource group, select or create: `rg-agentbuilder-dev`
+9. Name the service connection: `AIAutomation-service-connector`
+10. Click "Save"
+
+Azure DevOps will automatically:
+- Create the service principal in Azure AD
+- Assign it the Contributor role to your subscription/resource group
+- Configure all the authentication details
+
+## Alternative: Use Workload Identity (Recommended for new setups):
 
 ```bash
-# Check service principal permissions
-az role assignment list --assignee [SERVICE_PRINCIPAL_ID] --scope /subscriptions/[SUBSCRIPTION_ID]
-
-# Assign Contributor role if needed
-az role assignment create --assignee [SERVICE_PRINCIPAL_ID] --role "Contributor" --scope /subscriptions/[SUBSCRIPTION_ID]
+# No manual service principal needed - Azure DevOps handles everything
 ```
 
 ## Common Error Messages and Solutions:

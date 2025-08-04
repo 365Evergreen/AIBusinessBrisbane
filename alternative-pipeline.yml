@@ -1,0 +1,71 @@
+# Alternative Pipeline Configuration (No Service Connection Required)
+
+# This pipeline uses Azure CLI with device login instead of service connection
+# Replace the azure-pipelines.yml content with this if you prefer not to create a service connection
+
+trigger:
+  branches:
+    include:
+    - AIAutomation
+    - main
+    - master
+
+variables:
+- group: AIAutomationVariableGroup
+- name: resourceGroupName
+  value: 'rg-agentbuilder-dev'
+- name: location
+  value: 'eastus'
+- name: environmentName
+  value: 'dev'
+
+stages:
+- stage: Build
+  displayName: 'Build Application'
+  jobs:
+  - job: BuildFrontend
+    displayName: 'Build React Frontend'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Install Node.js'
+    
+    - script: |
+        cd agentbuilder-frontend
+        npm ci
+        npm run build
+      displayName: 'Build React App'
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: 'agentbuilder-frontend/build'
+        ArtifactName: 'frontend-build'
+      displayName: 'Publish Frontend Artifacts'
+
+  - job: BuildBackend
+    displayName: 'Build Azure Functions Backend'
+    dependsOn: BuildFrontend
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Install Node.js'
+    
+    - script: |
+        cd agentbuilder-backend
+        npm ci
+      displayName: 'Install Backend Dependencies'
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: 'agentbuilder-backend'
+        ArtifactName: 'backend-build'
+      displayName: 'Publish Backend Artifacts'
+
+# Note: Deploy stage would require manual Azure CLI setup
+# Recommended to use the service connection approach instead
